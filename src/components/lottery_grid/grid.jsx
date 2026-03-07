@@ -234,7 +234,8 @@ export default function LotteryGrid({refreshTrigger}) {
             <div className="flex items-center justify-center">
               <span className="text-xs font-black text-black uppercase">BLOCK</span>
             </div>
-            
+
+            {/* B rows */}
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={`head-b-${i}`} className="flex flex-col items-center gap-1">
                 <div className="text-xs font-black text-black uppercase">B{i}</div>
@@ -254,11 +255,10 @@ export default function LotteryGrid({refreshTrigger}) {
               </div>
             ))}
 
-
+            {/* f cell + 10 cells */}
             {Array.from({ length: 10 }).map((_, rowIndex) => (
               <React.Fragment key={`row-${rowIndex}`}>
                 
-
                 <div className="flex flex-col items-center gap-1">
                   <div className="text-[11px] font-black text-black uppercase">F{rowIndex}</div>
                   <input 

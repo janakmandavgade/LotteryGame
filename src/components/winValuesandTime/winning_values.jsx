@@ -49,7 +49,6 @@ function WinningValues({winValues}){
 
                 return (
                     <WinButton
-                        
                         key={index}
                         value={item}
                         color={randomColor}
