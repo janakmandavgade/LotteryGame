@@ -1,12 +1,9 @@
 function UtilRow({setRefreshTrigger}){
-    // impement refresh functionality
-
 
     return (
         <div className="h-full grid grid-cols-[70%_30%] w-full">
             {/* 70% */}
             <div className="grid grid-cols-8 gap-1">
-                {/* Time 1 */}
                 <div className="h-full bg-linear-to-r from-[#1bae0c] to-[#8AB55F] rounded-lg justify-center text-center text-[clamp(8px,1.5vw,14px)] flex items-center border-black border-1 text-white">
                     3:37:50 PM
                 </div>
@@ -42,17 +39,6 @@ function UtilRow({setRefreshTrigger}){
 
             {/* 30% */}
             <div>
-                {/* <div className="h-[3vh] grid grid-cols-3 gap-1 ml-0.5 items-center justify-center">
-                    <div className="h-full bg-[#A6070C] rounded-lg justify-center text-center text-[clamp(8px,1.5vw,14px)] flex items-center border-black border-1 text-white font-bold">
-                    3D Game
-                    </div>
-                    <div className="h-full bg-[#010001] rounded-lg justify-center text-center text-[clamp(8px,1.5vw,14px)] flex items-center border-black border-1 text-white font-bold">
-                        Password
-                    </div>
-                    <div className="h-full bg-[#EC4143] rounded-lg justify-center text-center text-[clamp(8px,1.5vw,14px)] flex items-center border-black border-1 text-white font-bold">
-                        Logout
-                    </div>
-                </div> */}
                 <div className="h-[6vh] flex items-center justify-center ml-1">
                     <div className="grid grid-cols-3 gap-1 w-full">
                         <div className="h-[3vh] bg-[#A6070C] rounded-lg flex items-center justify-center text-[clamp(8px,1.5vw,14px)] border border-black text-white font-bold">
