@@ -42,27 +42,36 @@ export default function LotteryGrid({refreshTrigger}) {
 
   const rowStats = useMemo(() => {
     const stats = Array.from({ length: 10 }, () => ({ qty: 0, amt: 0 }));
+    const thousandsBase = curr1000sIdx * 1000;
+    Object.entries(valueMap).forEach(([id, value]) => {
+      const numericId = parseInt(id);
+      if (numericId < thousandsBase || numericId >= thousandsBase + 1000) return;
+      const localId = numericId % 100;
+      if (!isCellAllowed(localId)) return;
+      const val = parseFloat(value) || 0;
+      if (val === 0) return;
+      const hundredsIdx = Math.floor((numericId - thousandsBase) / 100);
+      if (hundredsIdx >= 0 && hundredsIdx < 10) {
+        stats[hundredsIdx].qty += val;
+        stats[hundredsIdx].amt += (val * 2);
+      }
+    });
+    return stats;
+  }, [valueMap, evenOnly, oddOnly, curr1000sIdx]);
+
+  const grandTotals = useMemo(() => {
+    let qty = 0, amt = 0;
     Object.entries(valueMap).forEach(([id, value]) => {
       const numericId = parseInt(id);
       const localId = numericId % 100;
       if (!isCellAllowed(localId)) return;
       const val = parseFloat(value) || 0;
       if (val === 0) return;
-      const rowInBlock = Math.floor(localId / 10);
-      if (rowInBlock >= 0 && rowInBlock < 10) {
-        stats[rowInBlock].qty += val;
-        stats[rowInBlock].amt += (val * 2);
-      }
+      qty += val;
+      amt += val * 2;
     });
-    return stats;
+    return { qty, amt };
   }, [valueMap, evenOnly, oddOnly]);
-
-  const grandTotals = useMemo(() => {
-    return rowStats.reduce((acc, curr) => ({
-      qty: acc.qty + curr.qty,
-      amt: acc.amt + curr.amt
-    }), { qty: 0, amt: 0 });
-  }, [rowStats]);
 
   const stampData = (nextT, nextH) => {
     setValueMap(prevMap => {
@@ -134,22 +143,28 @@ export default function LotteryGrid({refreshTrigger}) {
   };
 
   return (
-    <div className="p-1 h-full w-full overflow-hidden flex flex-col font-sans">
+    <div className="p-0 w-full h-full overflow-hidden font-sans grid grid-rows-[7%_86%_7%]">
       {/* 1k Row */}
-      <div className="h-[6vh] grid grid-cols-[4fr_1fr] mb-0 shrink-0">
-        <div className='grid grid-cols-[1fr_11fr] gap-2 items-center justify-center'>
-          <div className="flex items-center justify-center text-center">
-            <input type="checkbox" checked={thousandsSelected.every(v => v)} onChange={() => toggleAll('1000')} className="w-full" />
-            <span className="inline-block h-full bg-black text-white text-center font-bold w-full px-3 py-1 rounded ">ALL</span>
+
+      <div className="grid grid-cols-[5fr_1fr] overflow-hidden w-full h-full items-center py-[1vh]">
+
+        <div className='grid grid-cols-[1fr_11fr] gap-[0.3vw] items-center justify-center overflow-hidden h-full'>
+
+          <div className="flex items-center justify-center text-center self-center max-h-[4vh] w-full gap-[0.2vw]">
+
+            <input type="checkbox" checked={thousandsSelected.every(v => v)} onChange={() => toggleAll('1000')} className="w-2 h-2 shrink-0" />
+            <span className="flex items-center justify-center bg-black text-white font-bold w-full px-[0.3vw] py-[0.5vh] rounded text-[clamp(5px,0.9vw,10px)] leading-none h-full">All</span>
           </div>
-          
-          <div className="grid grid-cols-10 gap-1 h-full items-center">
+
+          <div className="grid grid-cols-10 gap-[0.3vw] h-full items-center">
             {thousandsSelected.map((sel, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input type="checkbox" checked={sel} onChange={() => { const n = [...thousandsSelected]; n[i] = !n[i]; setThousandsSelected(n); if(n[i]) stampData(n, hundredsSelected); }} />
+
+              <div key={i} className="flex items-center gap-[0.2vw] min-w-0 overflow-hidden">
+                
+                <input type="checkbox" checked={sel} onChange={() => { const n = [...thousandsSelected]; n[i] = !n[i]; setThousandsSelected(n); if(n[i]) stampData(n, hundredsSelected); }} className="w-2 h-2 shrink-0" />
                 <button 
                   onClick={() => setCurr1000sIdx(i)} 
-                  className={`${colors[i]} text-white font-bold w-full h-full px-3 py-1 rounded shadow-sm hover:opacity-80 transition-opacity`}
+                  className={`${colors[i]} text-white font-bold w-full h-full px-0 py-0 rounded shadow-sm hover:opacity-80 transition-opacity text-[clamp(5px,0.9vw,10px)] truncate`}
                 >
                   {i}0-{i}9
                 </button>
@@ -158,11 +173,12 @@ export default function LotteryGrid({refreshTrigger}) {
           </div>
         </div>
 
-        <div className="flex gap-8 ml-auto pl-4 h-full w-full items-center justify-center">
+        <div className="flex gap-[0.5vw] pl-[0.3vw] h-full w-full items-center justify-center">
           {['EVEN', 'ODD', 'CP', 'FP'].map((label) => (
-            <label key={label} className="flex items-center text-xl gap-4 font-black cursor-pointer">
+            <label key={label} className="flex items-center text-[clamp(6px,1vw,11px)] gap-[0.5vw] font-black cursor-pointer h-full" >
               <input 
                 type="checkbox" 
+                className="w-2 h-2 shrink-0"
                 checked={label === 'EVEN' ? evenOnly : label === 'ODD' ? oddOnly : false} 
                 onChange={() => {
                   if (label === 'EVEN') { setEvenOnly(!evenOnly); setOddOnly(false); }
@@ -175,25 +191,26 @@ export default function LotteryGrid({refreshTrigger}) {
       </div>
 
       {/* Main Grid for matrix*/}
-      <div className="flex-grow grid grid-cols-[2fr_9fr_2fr] gap-1 w-full min-h-0">
-        <div className="flex flex-col h-full bg-[#F1F1F1]">
-          <div className="grid grid-rows-11 gap-1 h-full p-1 bg-white rounded-lg shadow-inner">
-            <div className="flex items-center justify-center h-full w-[96%] py-0.5 ml-1"> 
-              <div className="bg-black text-white rounded-full px-2 flex items-center h-[5vh] min-h-[22px] w-full shadow-sm border border-black">
+      
+      <div className="grid grid-cols-[2fr_9fr_2fr] gap-[0.3vh] w-full h-full overflow-hidden">
+        <div className="flex flex-col h-full max-h-full bg-[#F1F1F1] overflow-hidden">
+          <div className="grid grid-rows-11 gap-[0.3vh] h-full bg-white rounded-lg shadow-inner">
+            <div className="flex items-center justify-center h-full w-[94%] py-[0.4vh] ml-1">
+              <div className="bg-black text-white rounded-full px-2 flex items-center h-full w-full shadow-sm border border-black">
                 <input 
                   type="checkbox" 
                   className="w-3 h-3 accent-blue-500"
                   checked={hundredsSelected.every(v => v)} 
                   onChange={() => toggleAll('100')} 
                 />
-                <span className="text-[10px] font-black flex-1 text-center pr-4 leading-none">
+                <span className="text-[clamp(7px,1.1vw,11px)] font-black flex-1 text-center pr-4 leading-none">
                   ALL
                 </span>
               </div>
             </div>
 
             {hundredsSelected.map((sel, i) => (
-              <div key={i} className="flex items-center px-1 py-1">
+              <div key={i} className="flex items-center px-1 py-[0.4vh] overflow-hidden">
                 <div 
                   className={`flex items-center px-1 rounded-full border-[1.5px] h-full w-full min-h-0 py-0.5 transition-all ${
                     curr100sIdx === i 
@@ -226,10 +243,9 @@ export default function LotteryGrid({refreshTrigger}) {
 
 
         {/* Center Column */}
-        <div key={refreshTrigger} className="flex flex-col gap-1 w-full overflow-x-auto min-w-0 bg-[#F1F1F1]">
-          
+        <div key={refreshTrigger} className="flex flex-col w-full h-full overflow-hidden min-w-0 bg-[#F1F1F1]">
 
-          <div className="grid grid-cols-11 grid-rows-11 gap-1 w-full h-full p-4 rounded-xl shadow-sm ">
+          <div className="grid grid-cols-11 grid-rows-11 gap-[0.3vh] w-full h-full p-[0.5vh] rounded-xl shadow-sm">
 
             <div className="flex items-center justify-center">
               <span className="text-xs font-black text-black uppercase">BLOCK</span>
@@ -237,14 +253,14 @@ export default function LotteryGrid({refreshTrigger}) {
 
             {/* B rows */}
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={`head-b-${i}`} className="flex flex-col items-center gap-1">
-                <div className="text-xs font-black text-black uppercase">B{i}</div>
+              <div key={`head-b-${i}`} className="flex flex-col items-center gap-[0.1vh]">
+                <div className="text-[clamp(5px,1vw,10px)] font-black text-black uppercase">B{i}</div>
                 <input 
                   type="number" 
                   placeholder="" 
                   size={1}
                   onChange={(e) => updateMapValues(Array.from({ length: 10 }, (_, r) => r * 10 + i), e.target.value, `b${i}`)} 
-                  className="w-full h-6 min-w-0 rounded-full border-[1.5px] border-black
+                  className="w-full h-[2.5vh] min-w-0 rounded-full border-[1.5px] border-black
                     text-center text-xs font-bold 
                     appearance-none p-0 leading-none 
                     flex items-center justify-center
@@ -259,14 +275,14 @@ export default function LotteryGrid({refreshTrigger}) {
             {Array.from({ length: 10 }).map((_, rowIndex) => (
               <React.Fragment key={`row-${rowIndex}`}>
                 
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[11px] font-black text-black uppercase">F{rowIndex}</div>
+                <div className="flex flex-col items-center gap-[0.1vh]">
+                  <div className="text-[clamp(5px,1vw,10px)] font-black text-black uppercase">F{rowIndex}</div>
                   <input 
                     type="number" 
                     size={1}
                     placeholder="" 
                     onChange={(e) => updateMapValues(Array.from({ length: 10 }, (_, c) => rowIndex * 10 + c), e.target.value, `f${rowIndex}`)} 
-                    className="w-full h-full max-h-[3.5vh] rounded-full border border-black text-center text-[10px] font-bold p-0 flex items-center justify-center focus:outline-none"
+                    className="w-full h-full max-h-[3vh] rounded-full border border-black text-center text-[clamp(6px,1.2vw,11px)] font-bold p-0 flex items-center justify-center focus:outline-none"
                   />
                 </div>
 
@@ -277,9 +293,10 @@ export default function LotteryGrid({refreshTrigger}) {
                   const disabled = !isCellAllowed(localId);
 
                   return (
-                    <div key={absoluteId} className="flex flex-col items-center gap-1">
-                      <span className={`text-[11px] font-black ${disabled ? 'text-gray-300' : 'text-black'}`}>
-                        {absoluteId}
+                    <div key={absoluteId} className="flex flex-col items-center gap-[0vh]">
+                        <span className={`text-[clamp(6px,1vw,10px)] font-black ${disabled ? 'text-gray-300' : 'text-black'}`}>
+                        {/* {absoluteId} */}
+                        {String(absoluteId).padStart(4, '0')}
                       </span>
                       <input 
                         type="number" 
@@ -287,7 +304,7 @@ export default function LotteryGrid({refreshTrigger}) {
                         disabled={disabled}
                         value={valueMap[absoluteId] || ""} 
                         onChange={(e) => updateMapValues([localId], e.target.value, `cell${absoluteId}`, true)} 
-                        className={`w-full h-7 rounded-full border-[1.5px] border-black
+                        className={`w-full h-[3vh] rounded-full border-[1.5px] border-black
                           text-center text-xs font-bold 
                           appearance-none p-0 leading-none 
                           flex items-center justify-center
@@ -306,26 +323,25 @@ export default function LotteryGrid({refreshTrigger}) {
         </div>
 
         {/* Right Column */}
-        <div className="flex flex-col h-full bg-[#F1F1F1]">
-
-          <div className="grid grid-rows-11 gap-y-2 h-full p-4">
+        <div className="flex flex-col h-full max-h-full bg-[#F1F1F1] overflow-hidden">
+          <div className="grid grid-rows-11 gap-y-[0.8vh] h-full">
             
             <div className="grid grid-cols-2 gap-x-1">
               <div className="flex items-center justify-center  bg-[#FE0D09] rounded-md border-b border-gray-300">
-                <span className="text-[9px] font-black  text-white">QTY</span>
+                <span className="text-[clamp(5px,1vw,9px)] font-black  text-white">QTY</span>
               </div>
               <div className="flex items-center justify-center bg-[#FE0D09] rounded-md border-b border-gray-300">
-                <span className="text-[9px] font-black text-white">AMT</span>
+                <span className="text-[clamp(5px,1vw,9px)] font-black text-white">AMT</span>
               </div>
             </div>
 
             {rowStats.map((stat, i) => (
               <div key={i} className="grid grid-cols-2 gap-1 h-full min-h-0 py-0.5">
                 <div className="flex items-center justify-center bg-[#010180] rounded-full border border-black h-full">
-                  <span className="text-[10px] font-bold text-white leading-none">{stat.qty}</span>
+                  <span className="text-[clamp(6px,1.1vw,10px)] font-bold text-white leading-none">{stat.qty}</span>
                 </div>
                 <div className="flex items-center justify-center bg-[#010180] rounded-full border border-black h-full">
-                  <span className="text-[10px] font-bold text-white leading-none">{stat.amt}</span>
+                  <span className="text-[clamp(6px,1.1vw,10px)] font-bold text-white leading-none">{stat.amt}</span>
                 </div>
               </div>
             ))}
@@ -334,25 +350,18 @@ export default function LotteryGrid({refreshTrigger}) {
 
       </div>
 
-      <div className='shrink-0 h-[6vh] grid grid-cols-[25fr_55fr_20fr] border-t-2 border-black bg-white'>
-        <div className='bg-[#FE0000] flex justify-center items-center text-white'>Advance Draw F9</div>
-        <div className='flex flex-row bg-[#7E22CD] justify-between items-center'>
-          <input 
-            type='string'
-            placeholder='Barcode'
-            className='h-6 bg-white border-2 border-black rounded-md'
-          />
-          <div>
-            <button className='bg-[#FE0000] rounded-md h-[4vh] w-[20vw] text-white'>
-                Buy
-            </button>
-          </div>
+      <div className='grid grid-cols-[25fr_55fr_20fr] border-t-2 border-black bg-white overflow-hidden h-full'>
+        <div className='bg-[#FE0000] flex justify-center items-center text-white text-[clamp(6px,1.2vw,12px)] font-bold text-center px-[0.3vw] h-full'>Advance Draw F9</div>
+        <div className='flex flex-row bg-[#7E22CD] items-center justify-end h-full px-[1vw]'>
+          <button className='bg-[#FE0000] rounded-md h-[60%] w-[60%] text-white text-[clamp(6px,1.2vw,12px)] font-bold flex items-center justify-center'>
+              Buy
+          </button>
         </div>
-        <div className=' flex flex-row bg-[#00807F] justify-around items-center'>
-          <div className='bg-white h-3/4 w-1/4 text-2xl items-center text-center justify-center rounded-md'>
+        <div className='flex flex-row bg-[#00807F] justify-around items-center h-full'>
+          <div className='bg-white h-[60%] w-[35%] text-[clamp(8px,1.5vw,16px)] rounded-md font-bold flex items-center justify-center'>
             {grandTotals.qty}
           </div>
-          <div className='bg-white h-3/4 w-1/4 text-2xl items-center text-center justify-center rounded-md'>
+          <div className='bg-white h-[60%] w-[35%] text-[clamp(8px,1.5vw,16px)] rounded-md font-bold flex items-center justify-center'>
             {grandTotals.amt}
           </div>
         </div>

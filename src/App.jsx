@@ -12,16 +12,15 @@ function App() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     return (
-      <div className='h-screen w-full flex flex-col overflow-hidden'>
+      <div className='h-dvh w-full flex flex-col overflow-hidden'>
         <div className='shrink-0 bg-black'>
           <WinningValues winValues={winValues} />
           <ScrollingText />
         </div>
-        <div className='shrink-0 h-[5vh]'>
+        <div className='shrink-0 h-[6vh]'>
           <UtilRow setRefreshTrigger={setRefreshTrigger} />
         </div>
-        {/* This container now controls the remaining 100% height */}
-        <div className='flex-grow overflow-hidden'>
+        <div className='flex-grow min-h-0 overflow-hidden'>
           <LotteryGrid refreshTrigger={refreshTrigger}/>
         </div>
     </div>

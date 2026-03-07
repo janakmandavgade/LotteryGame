@@ -43,7 +43,7 @@ function WinningValues({winValues}){
     }
 
     return (
-        <div className="grid grid-cols-11 w-full gap-1">
+        <div className="grid grid-cols-11 w-full gap-[0.3vh]">
             {winValues.map((item, index) => {
                 const randomColor = colors[index];
 
