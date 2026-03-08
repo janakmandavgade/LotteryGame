@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 
-export default function LotteryGrid({refreshTrigger, curr1000sIdx, setCurr1000sIdx, setGrandTotals}) {
+export default function LotteryGrid({refreshTrigger, curr1000sIdx, setCurr1000sIdx, setGrandTotals, pendingTransactions, setPendingTransactions}) {
   const [valueMap, setValueMap] = useState({});
   // const [curr1000sIdx, setCurr1000sIdx] = useState(0);
   const [curr100sIdx, setCurr100sIdx] = useState(0);
@@ -31,6 +31,31 @@ export default function LotteryGrid({refreshTrigger, curr1000sIdx, setCurr1000sI
     setEvenOnly(false);
     setOddOnly(false);
     bulkPrevValues.current = {};
+    document.querySelectorAll('input[type="number"]').forEach(i => i.value = "");
+  };
+
+  const handleBuy = () => {
+
+    if (Object.keys(valueMap).length === 0) return;
+
+    const email = JSON.parse(localStorage.getItem("currentUser")).email;
+
+    const playedValues = Object.fromEntries(
+      Object.entries(valueMap).filter(([_, v]) => v > 0)
+    );
+
+    const transaction = {
+      email,
+      valuesPlayed: playedValues,
+      total_qty: grandTotals.qty,
+      total_amt: grandTotals.amt,
+      time: new Date(),
+      date: new Date()
+    };
+
+    setPendingTransactions(prev => [...prev, transaction]);
+
+    handleRefresh();
   };
 
   useEffect(() => {
@@ -357,7 +382,7 @@ export default function LotteryGrid({refreshTrigger, curr1000sIdx, setCurr1000sI
       <div className='grid grid-cols-[25fr_55fr_20fr] border-t-2 border-black bg-white overflow-hidden h-full'>
         <div className='bg-[#FE0000] flex justify-center items-center text-white text-[clamp(6px,1.2vw,12px)] font-bold text-center px-[0.3vw] h-full'>Advance Draw F9</div>
         <div className='flex flex-row bg-[#7E22CD] items-center justify-end h-full px-[1vw]'>
-          <button className='bg-[#FE0000] rounded-md h-[60%] w-[60%] text-white text-[clamp(6px,1.2vw,12px)] font-bold flex items-center justify-center'>
+          <button className='bg-[#FE0000] rounded-md h-[60%] w-[60%] text-white text-[clamp(6px,1.2vw,12px)] font-bold flex items-center justify-center' onClick={handleBuy}>
               Buy
           </button>
         </div>

@@ -5,13 +5,53 @@ import { fetchBalance } from "../../utils/fetchBalance";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const API_KEY = import.meta.env.VITE_API_KEY;
+const SLOT = parseInt(import.meta.env.VITE_SLOT || "15");
 
-function UtilRow({setRefreshTrigger, grandTotals}){
-    const SLOT = 15; // minutes
+function UtilRow({setRefreshTrigger, grandTotals, pendingTransactions,
+  setPendingTransactions}){
+    // const SLOT = SLOT; // minutes
+    // const SLOT = import.meta.env.VITE_SLOT;
+
     const navigate = useNavigate();
     const [points, setPoints] = useState();
 
-    const displayPoints = Math.max(points - grandTotals.amt, 0);
+    const pendingAmt = pendingTransactions.reduce(
+        (sum, t) => sum + (t.total_amt || 0),
+        0
+    );
+
+    const displayPoints = Math.max((points || 0) - pendingAmt - (grandTotals?.amt || 0),0);
+
+    const sendTransactions = async () => {
+
+        if (!pendingTransactions || pendingTransactions.length === 0) return;
+
+        try {
+            
+            console.log("Pending transactions are:" , pendingTransactions)
+
+            await axios.post(
+                BACKEND_URL + "api/record",
+                { records: pendingTransactions },
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        "x-api-key": API_KEY
+                    }
+                }
+            );
+            
+            // clear pending
+            setPendingTransactions([]);
+
+            // refresh balance
+            const balance = await fetchBalance();
+            setPoints(balance);
+
+        } catch (err) {
+            console.error("Transaction send failed:", err);
+        }
+    };
 
     useEffect(() => {
 
@@ -82,7 +122,9 @@ function UtilRow({setRefreshTrigger, grandTotals}){
         getRemainingTime(initialNext)
     );
 
-    
+    useEffect(() => {
+    console.log("Pending transactions updated:", pendingTransactions);
+    }, [pendingTransactions]);
 
     useEffect(() => {
 
@@ -103,6 +145,10 @@ function UtilRow({setRefreshTrigger, grandTotals}){
             );
 
             if (now >= next) {
+            // if (remainingTime === "00:01 RT"){             
+                (async () => {
+                    await sendTransactions();
+                })();
 
                 const newNext = new Date(next);
                 newNext.setMinutes(newNext.getMinutes() + SLOT);
@@ -112,7 +158,7 @@ function UtilRow({setRefreshTrigger, grandTotals}){
                 setRefreshTrigger(prev => prev + 1);
             }
 
-            const diff = next.getTime() - now.getTime();
+            const diff = Math.max(next.getTime() - now.getTime(), 0);
 
             const minutes = Math.floor(diff / 60000);
             const seconds = Math.floor((diff % 60000) / 1000);
@@ -128,7 +174,7 @@ function UtilRow({setRefreshTrigger, grandTotals}){
 
         return () => clearInterval(interval);
 
-    }, []);
+    }, [pendingTransactions]);
     
     return (
         <div className="h-full grid grid-cols-[70%_30%] w-full overflow-hidden">

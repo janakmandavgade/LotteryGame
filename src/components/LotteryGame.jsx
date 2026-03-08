@@ -11,7 +11,7 @@ function LotteryGame() {
     const [resultsMap, setResultsMap] = useState({});
     const [curr1000sIdx, setCurr1000sIdx] = useState(1);
     const [grandTotals, setGrandTotals] = useState({ qty: 0, amt: 0 });
-
+    const [pendingTransactions, setPendingTransactions] = useState([]);
 
     const today = new Date().toISOString().split("T")[0];
     const latestResult = resultsMap?.[today]?.[0];
@@ -38,10 +38,12 @@ function LotteryGame() {
           <ScrollingText />
         </div>
         <div className='shrink-0 h-[6vh]'>
-          <UtilRow setRefreshTrigger={setRefreshTrigger} grandTotals={grandTotals}/>
+          <UtilRow setRefreshTrigger={setRefreshTrigger} grandTotals={grandTotals} pendingTransactions={pendingTransactions}
+  setPendingTransactions={setPendingTransactions}/>
         </div>
         <div className='flex-grow min-h-0 overflow-hidden'>
-          <LotteryGrid refreshTrigger={refreshTrigger} curr1000sIdx={curr1000sIdx} setCurr1000sIdx={setCurr1000sIdx} setGrandTotals={setGrandTotals}/>
+          <LotteryGrid refreshTrigger={refreshTrigger} curr1000sIdx={curr1000sIdx} setCurr1000sIdx={setCurr1000sIdx} setGrandTotals={setGrandTotals} pendingTransactions={pendingTransactions}
+  setPendingTransactions={setPendingTransactions}/>
         </div>
     </div>
     )
