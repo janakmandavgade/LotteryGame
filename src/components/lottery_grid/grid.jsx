@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 
-export default function LotteryGrid({refreshTrigger}) {
+export default function LotteryGrid({refreshTrigger, curr1000sIdx, setCurr1000sIdx, setGrandTotals}) {
   const [valueMap, setValueMap] = useState({});
-  const [curr1000sIdx, setCurr1000sIdx] = useState(0);
+  // const [curr1000sIdx, setCurr1000sIdx] = useState(0);
   const [curr100sIdx, setCurr100sIdx] = useState(0);
   const [thousandsSelected, setThousandsSelected] = useState(new Array(10).fill(false));
   const [hundredsSelected, setHundredsSelected] = useState(new Array(10).fill(false));
@@ -72,6 +72,10 @@ export default function LotteryGrid({refreshTrigger}) {
     });
     return { qty, amt };
   }, [valueMap, evenOnly, oddOnly]);
+
+  useEffect(() => {
+    setGrandTotals(grandTotals);
+  }, [grandTotals]);
 
   const stampData = (nextT, nextH) => {
     setValueMap(prevMap => {
