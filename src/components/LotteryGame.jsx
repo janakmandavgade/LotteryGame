@@ -9,7 +9,7 @@ import { fetchResults } from '../utils/fetchResults';
 function LotteryGame() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [resultsMap, setResultsMap] = useState({});
-    const [curr1000sIdx, setCurr1000sIdx] = useState(1);
+    const [curr1000sIdx, setCurr1000sIdx] = useState(0);
     const [grandTotals, setGrandTotals] = useState({ qty: 0, amt: 0 });
     const [pendingTransactions, setPendingTransactions] = useState([]);
 
